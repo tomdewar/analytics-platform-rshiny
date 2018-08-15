@@ -14,7 +14,6 @@ RUN apt-get update
 
 RUN apt-get remove -y libperl5.26
 
-
 RUN apt-get update && apt-get install -y -t unstable \
     sudo \
     gdebi-core \
@@ -25,7 +24,7 @@ RUN apt-get update && apt-get install -y -t unstable \
     libxt-dev && \
     wget --no-verbose https://download3.rstudio.org/ubuntu-14.04/x86_64/VERSION -O "version.txt" && \
     VERSION=$(cat version.txt)  && \
-    wget --no-verbose "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb && \
+    wget --no-verbose "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.7.907-amd64.deb" -O ss-latest.deb && \
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb && \
     R -e "install.packages(c('shiny', 'rmarkdown'), repos='https://cran.rstudio.com/')" && \

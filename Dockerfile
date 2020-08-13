@@ -1,47 +1,43 @@
-# Pin a specific version of r base 3.4.2 to correspond to R Studio on the paltform
-FROM r-base@sha256:909f337dc78803f2d648ba6e256e73f45897f83c7d34831d3a980a7b52fbb39d
+FROM rocker/shiny@sha256:761711ab26348e324df8e657647ea221f5e28a6d13d7bb57fdaf02ce2bd725b1
 
+WORKDIR /srv/shiny-server
 
-# Remainder is the Dockerfile from https://github.com/rocker-org/shiny/tree/282306dff422a66d5041b8c55e2e82b083b4c8b4
-MAINTAINER Winston Chang "winston@rstudio.com"
+SHELL ["/bin/bash", "-c"]
 
-## Install dependencies and Download and install shiny server
+# Cleanup shiny-server dir
+RUN rm -rf ./*
 
-## See https://www.rstudio.com/products/shiny/download-server/ for the
-## instructions followed here.
+# Make sure the directory for individual app logs exists
+RUN mkdir -p /var/log/shiny-server
 
-RUN apt-get update
-RUN apt-mark hold r-base-core  # apt-get commands such as apt-get install curl will sometimes upgrade the version of R, which we want pinned
+RUN apt-get update -y && \
+    apt-get install -y wget bzip2 ca-certificates curl git libxml2-dev libssl-dev gpg apt-transport-https && \
+    wget -qO - https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg && \
+    install -o root -g root -m 644 conda.gpg /etc/apt/trusted.gpg.d/ && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get remove -y libperl5.26
+RUN echo "deb [arch=amd64] https://repo.anaconda.com/pkgs/misc/debrepo/conda stable main" > /etc/apt/sources.list.d/conda.list && \
+    apt-get update -y && \
+    apt-get install conda -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y -t unstable \
-    sudo \
-    gdebi-core \
-    pandoc \
-    pandoc-citeproc \
-    libcurl4-gnutls-dev \
-    libcairo2-dev/unstable \
-    libxt-dev && \
-    wget --no-verbose https://download3.rstudio.org/ubuntu-14.04/x86_64/VERSION -O "version.txt" && \
-    VERSION=$(cat version.txt)  && \
-    wget --no-verbose "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.7.907-amd64.deb" -O ss-latest.deb && \
-    gdebi -n ss-latest.deb && \
-    rm -f version.txt ss-latest.deb && \
-    R -e "install.packages(c('shiny', 'rmarkdown'), repos='https://cran.rstudio.com/')" && \
-    cp -R /usr/local/lib/R/site-library/shiny/examples/* /srv/shiny-server/ && \
-    rm -rf /var/lib/apt/lists/
+RUN /opt/conda/bin/conda clean -tipsy && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> /etc/bash.bashrc && \
+    echo "conda activate base" >> /etc/bash.bashrc && \
+    /opt/conda/bin/conda install r-base -y
 
+ENV PATH /opt/conda/bin:$PATH
 
+# Shiny runs as 'shiny' user, adjust app directory permissions
+RUN chown -R shiny:shiny .
 
-COPY shiny-server.sh /usr/bin/shiny-server.sh
+# APT Cleanup
+RUN apt-get clean && rm -rf /var/lib/apt/lists/
 
-## Uncomment the line below to include a custom configuration file. You can download the default file at
-## https://raw.githubusercontent.com/rstudio/shiny-server/master/config/default.config
-## (The line below assumes that you have downloaded the file above to ./shiny-customized.config)
-## Documentation on configuration options is available at
-## http://docs.rstudio.com/shiny-server/
-
-# COPY shiny-customized.config /etc/shiny-server/shiny-server.conf
-
-CMD ["/usr/bin/shiny-server.sh"]
+# Run shiny-server on port 80
+RUN sed -i 's/3838/80/g' /etc/shiny-server/shiny-server.conf
+CMD ["/bin/bash", "-c", "/usr/bin/shiny-server.sh"]
+EXPOSE 80

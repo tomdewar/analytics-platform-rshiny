@@ -1,12 +1,42 @@
-# Docker for Shiny Server
+# analytics-platform-rshiny
+
+RShiny Docker image for Analytics Platform
 
 [![Docker Repository on Quay](https://quay.io/repository/mojanalytics/rshiny/status "Docker Repository on Quay")](https://quay.io/repository/mojanalytics/rshiny)
 
 Users can deploy [shiny apps](https://shiny.rstudio.com/) on the Analytical Platform.
 
-## Builds
+## Usage
 
-The docker image is built and hosted on [Quay.io](https://quay.io/repository/mojanalytics/rshiny)
+#### Build
+
+```
+docker image build --no-cache -t quay.io/mojanalytics/rshiny .
+```
+
+Generally you don't need to do this after making changes as `quay.io` will automatically build the Dockerfile on commits.
+
+#### Run locally
+
+```
+docker container run -d --rm quay.io/mojanalytics/rshiny
+```
+
+#### Tag/Push
+
+When satisfied Tag and push the image
+
+Tag
+
+```
+docker image tag quay.io/mojanalytics/rshiny quay.io/mojanalytics/rshiny:<x.x.x>
+```
+
+Push
+
+```
+docker image push quay.io/mojanalytics/rshiny:<x.x.x>
+```
 
 ## Per User Apps
 

@@ -1,4 +1,5 @@
-FROM rocker/shiny@sha256:761711ab26348e324df8e657647ea221f5e28a6d13d7bb57fdaf02ce2bd725b1
+# use R version 4.0.2
+FROM rocker/shiny@sha256:65d01824acb50b64303a0ab52bb185ff2ca2ba6ed949990c4255a38206639e79
 
 WORKDIR /srv/shiny-server
 
